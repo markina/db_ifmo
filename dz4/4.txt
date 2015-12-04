@@ -1,0 +1,326 @@
+I
+
+Student_Id
+Student_Name
+Group_Id
+Group_Name
+Course_Id
+Course_Name
+Lecturer_Id
+Lecturer_Name
+Mark
+
+1. 1НФ
+В отношении нет повторяющихся групп
+Все атрибуты атомарны
+Нет одинаковых строк благодаря Student_Id
+=> Отношение в 1НФ
+
+2. 2НФ
+Функцианальные зависимости:
+Предполагаем, что по курсу у студента одна оценка.
+У каждого курса в группе есть только один преподаватель.
+Курс могут вести несколько преподаветелей, например,
+"с++" в группе 3538 - Сорокин
+"c++" в группе 3111 - Петров
+
+Неприводимое множество ФЗ:
+
+Course_Id -> Course_Name
+Lecturer_Id -> Lecturer_Name
+Student_Id -> Student_Name
+Student_Id -> Group_Id
+Group_Id Course_Id -> Lecturer_Id
+Student_Id Course_Id -> Mark
+
+Ключ:
+{Student_Id Course_Id}
+Student_Id выкинуть нельзя, потому что нет в правых частях,
+Course_Id выкинуть нельзя, потому что нет в правых частях,
+больще таких атрибутов нет.
+По Student_Id и Course_Id можно определить все.
+
+Есть зависимоти от части ключа, например,
+Course_Id -> Course_Name
+Student_Id -> Student_Name
+Student_Id -> Group_Id
+Student_Id -> Group_Name (Group_Name никак не зависит от Course_Id)
+
+Декомпозируем по «мешающим» ФЗ:
+________________     ______________
+| Student_Id    |- -| Course_Id	   |
+| Student_Name 	|	| Course_Name  |	Course_Id -> Course_Name
+| Group_Id		|	|______________|
+| Group_Name	|- -| Student_Id   |
+| Course_Id		|	| Student_Name |	Student_Id -> Student_Name
+| Course_Name	|	| Group_Id     |	Student_Id -> Group_Id
+| Lecturer_Id	|   | Group_Name   |	Group_Id -> Group_Name
+| Lecturer_Name	|	|______________|
+| Mark			|- -| Student_Id   |
+|_______________|	| Course_Id    |	Lecturer_Id -> Lecturer_Name
+					| Lecturer_Id  |	Student_Id Course_Id -> Lecturer_Id
+					| Lecturer_Name|	Student_Id Course_Id -> Mark
+					| Mark  	   |
+					|______________|
+
+
+3. 3НФ
+Составляем транзитивную цепочки:
+1) Student_Id -> Group_Id -> Group_Name
+2) Group_Id Course_Id -> Lecturer_Id -> Lecturer_Name
+
+ ______________      ______________
+| Course_Id	   |- - | Course_Id	   |
+| Course_Name  |    | Course_Name  |    Course_Id -> Course_Name
+|______________|    |______________|
+| Student_Id   |- - | Group_Id     |
+| Student_Name |	| Group_Name   |    Group_Id -> Group_Name
+| Group_Id     |	|______________|
+| Group_Name   |- - | Student_Id   |
+|______________|    | Student_Name |    Student_Id -> Student_Name
+| Student_Id   |	| Group_Id     |    Student_Id -> Group_Id
+| Course_Id    |	|______________|
+| Lecturer_Id  |- -	| Lecturer_Id  |
+| Lecturer_Name|	| Lecturer_Name|	Lecturer_Id -> Lecturer_Name
+| Mark  	   |    |______________|
+|______________|- -	| Student_Id   |
+                    | Course_Id    |    Student_Id Course_Id -> Lecturer_Id
+                    | Lecturer_Id  |    Student_Id Course_Id -> Mark
+                    | Mark  	   |
+                    |______________|
+
+
+4. НФБК
+В каждой нетривиальные функциональной зависимости X→Y, X является надключом => НФБД выполнилась
+
+5. 4НФ
+Все МЗ являются ФЗ => все из левые части надключи => любой атрибут зависит от левой части => 4НФ
+
+6. 5НФ
+На практике ЗС не являющиеся МЗ встречаются редко => вряд ли тут такая есть => все ЗС есть МЗ =>
+все X_i надключи => 5НФ
+
+II
+Будем считать, что в студента точно есть группа
+
+Пока мы приводили итеративно к 5НФ, мы потеряли Group_Id Course_Id -> Lecturer_Id, заменив
+ее Student_Id Course_Id -> Lecturer_Id, поэтому сделаем в табличке Mark поле Makr необязательным,
+что запретит выставлять любому преподавателю по любому предмету любому студенту оценку.
+То есть заполнение будет происходить следующим образом:
+Сначала появятся строчки для всех студентов с валидными курсами и преподавателями. После
+этого, при добавлении оценки будет проверяться, есть ли такая строчка и после этого заполняться.
+
+То есть это будет ограничено user interface для тех, кто составляет расписание и для тех, кто
+выставляет оценки.
+
+
+IV
+
+CREATE TABLE student (
+	student_id  INT NOT NULL PRIMARY KEY,
+	student_name VARCHAR(50) NOT NULL,
+	group_id INT NOT NULL 
+);
+
+CREATE TABLE student_group (
+	group_id INT NOT NULL PRIMARY KEY,
+	group_name VARCHAR(10) NOT NULL
+);
+
+CREATE TABLE course (
+	course_id INT NOT NULL PRIMARY KEY,
+	course_name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE lecturer (
+	lecturer_id INT NOT NULL PRIMARY KEY,
+	lecturer_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE student_mark (
+	mark VARCHAR(1),
+	lecturer_id INT NOT NULL, 
+	student_id INT NOT NULL,
+	course_id INT NOT NULL,
+	PRIMARY KEY(student_id, course_id)
+);
+
+   ALTER TABLE student
+ADD CONSTRAINT student_group 
+   FOREIGN KEY (group_id) 
+    REFERENCES student_group(group_id);
+
+   ALTER TABLE student_mark 
+ADD CONSTRAINT mark_lecturer 
+   FOREIGN KEY (lecturer_id) 
+    REFERENCES lecturer(lecturer_id);
+
+   ALTER TABLE student_mark 
+ADD CONSTRAINT mark_course 
+   FOREIGN KEY (course_id) 
+    REFERENCES course(course_id);
+
+   ALTER TABLE student_mark 
+ADD CONSTRAINT mark_student 
+   FOREIGN KEY (student_id) 
+    REFERENCES student(student_id);
+
+INSERT INTO student_group
+	(group_id, group_name) VALUES
+	(1, 'M3437'),
+	(2, 'M3438'),
+	(3, 'M3439');
+
+INSERT INTO student
+	(student_id, student_name, group_id) VALUES
+	(1, 'Руслан', 2),
+	(2, 'Сережа', 2),
+	(3, 'Лера', 3),
+	(4, 'Юра', 1);
+
+INSERT INTO course
+	(course_id, course_name) VALUES
+	(1, 'Базы данных'),
+	(2, 'c++'),
+	(3, 'Матан'),
+	(4, 'Java');
+
+INSERT INTO lecturer
+	(lecturer_id, lecturer_name) VALUES
+	(1, 'Корнеев'),
+	(2, 'Сорокин'),
+	(3, 'Додонов'),
+	(4, 'Кохась');
+
+INSERT INTO student_mark 
+	(student_id, course_id, lecturer_id) VALUES
+	(1, 1, 1),
+	(1, 2, 2),
+	(1, 3, 3),
+	(1, 4, 1),
+	(2, 1, 1),
+	(2, 2, 2),
+	(2, 3, 3),
+	(2, 4, 1),
+	(3, 1, 1),
+	(3, 2, 2),
+	(3, 3, 3),
+	(3, 4, 1),
+	(4, 1, 1),
+	(4, 2, 2),
+	(4, 3, 4), -- У этого студнта иной препод по матану, чем у других
+	(4, 4, 1);
+
+-- INSERT INTO student_mark 
+-- 	(student_id, course_id, lecturer_id) VALUES
+-- 	(1, 1, 3); <------------- ERROR
+
+UPDATE student_mark
+   SET mark = 'A'
+ WHERE student_id = 1 
+   AND course_id = 1 
+   AND lecturer_id = 1;
+
+-- Тут надо указать лектора, чтобы не любой лектор мог поставить 
+-- оценку по курсу.
+
+UPDATE student_mark
+   SET mark = 'C'
+ WHERE student_id = 2 
+   AND course_id = 1 
+   AND lecturer_id = 1;
+
+UPDATE student_mark
+   SET mark = 'D'
+ WHERE student_id = 4 
+   AND course_id = 1 
+   AND lecturer_id = 1;
+
+UPDATE student_mark
+   SET mark = 'B'
+ WHERE student_id = 3 
+   AND course_id = 1 
+   AND lecturer_id = 1;
+
+-- SELECT st.student_name, c.course_name, l.lecturer_name, sm.mark 
+--   FROM student_mark sm, student st, course c, lecturer l 
+--  WHERE sm.student_id = st.student_id 
+--    AND sm.course_id = c.course_id 
+--    AND sm.lecturer_id = l.lecturer_id;
+
+--  student_name | course_name | lecturer_name | mark 
+-- --------------+-------------+---------------+------
+--  Руслан       | c++         | Сорокин       | 
+--  Руслан       | Матан       | Додонов       | 
+--  Руслан       | Java        | Корнеев       | 
+--  Сережа       | c++         | Сорокин       | 
+--  Сережа       | Матан       | Додонов       | 
+--  Сережа       | Java        | Корнеев       | 
+--  Лера         | c++         | Сорокин       | 
+--  Лера         | Матан       | Додонов       | 
+--  Лера         | Java        | Корнеев       | 
+--  Юра          | c++         | Сорокин       | 
+--  Юра          | Матан       | Кохась        | 
+--  Юра          | Java        | Корнеев       | 
+--  Руслан       | Базы данных | Корнеев       | A
+--  Сережа       | Базы данных | Корнеев       | C
+--  Юра          | Базы данных | Корнеев       | D
+--  Лера         | Базы данных | Корнеев       | B
+-- (16 rows)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

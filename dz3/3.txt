@@ -1,0 +1,26 @@
+Student_id
+Student_Name
+Group_id
+Group_name
+Course_Id
+Course_Name
+Lecturer_Id
+Lecturer_Name
+Mark
+
+Student_id -> Student_Name Group_id Group_name 
+Group_id -> Group_name
+Course_Id -> Course_Name
+Lecturer_Id -> Lecturer_Name
+Student_id Course_Id Lecturer_Id -> Mark
+
+Ключ: Student_id Course_Id Lecturer_Id
+
+Неприводимое множество функциональных зависимостей:
+Student_id -> Student_Name 
+Student_id -> Group_id 
+Group_id -> Group_name
+Course_Id -> Course_Name
+Lecturer_Id -> Lecturer_Name
+Student_id Course_Id Lecturer_Id -> Mark
+

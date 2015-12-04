@@ -1,0 +1,59 @@
+Маркина Маргарита M3438
+
+
+1) Функциональные зависимости:
+
+    (тривиальные зависимости не перечислены, а в правых частях опущены атрибуты из левых частей)
+
+    StudentId -> StudentName
+    GroupId -> GroupName
+    CourseId -> CourseName
+    LecturerId -> LecturerName
+
+    StudentId[ StudentName]
+    [CourseId[ CourseName]]
+    [LecturerId[ LecturerName]]
+    [Mark] 
+    -> GroupId[ GroupName]
+
+    CourseId[ CourseName]
+    [StudentId[ StudentName]]
+    [CourseId[ CourseName]]
+    [LecturerId[ LecturerName]]
+    [Mark] 
+    -> GroupId[ GroupName]
+
+    CourseId[ CourseName]
+    [StudentId[ StudentName]]
+    [GroupId[ GroupName]]
+    [Mark] 
+    -> LecturerId[ LecturerName]
+
+    StudentId[ StudentName] 
+    CourseId[ CourseName]
+    [GroupId[ GroupName]]
+    [LecturerId[ LecturerName]] 
+    -> Mark
+
+    (предполагается, что по одному курсу у студента может быть не больше одной оценки, и у каждого курса есть один преподаватель, а курс закреплён за группой)
+
+2) Ключи
+
+    StudentId, CourseId
+    
+    StudentId, GroupId, LecturerId не является ключом, потому что один и тот же преподаватель может вести несколько курсов, в том числе и у одной группы.
+    
+3) Неприводимое множество ФЗ
+    
+    {
+        StudentId -> StudentName
+        GroupId -> GroupName
+        CourseId -> CourseName
+        LecturerId -> LecturerName
+        
+        StudentId -> GroupId
+        CourseId -> GroupId
+        CourseId -> LecturerId
+        
+        StudentId CourseId -> Mark
+    }

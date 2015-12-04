@@ -1,0 +1,80 @@
+sudo -u postgres psql
+
+CREATE USER rita PASSWORD '1313';
+create database CTD;
+use CTD; -  не работает в postgres, потому что после подключения я могу использовать только одну базу данных. Для того, чтобы сменить бд, надо сделать новое подключение.
+create table Groups (
+    group_id int,
+    group_no char(5)
+);
+create table Students (
+    student_id int,
+    name varchar(30),
+    group_id int
+);
+insert into Groups
+    (group_id, group_no) values
+    (1, 'M3438'),
+    (2, 'M3439');
+insert into Students
+    (student_id, name, group_id) values
+    (1, 'Ruslan Ahundov', 1),
+    (2, 'Pavel Asadchy', 2),
+    (3, 'Eugene Varlamov', 2);
+select group_id, group_no from Groups;
+select student_id, name, group_id from Students;
+select name, group_no
+    from Students natural join Groups;
+select Students.name, Groups.group_no
+    from Students 
+         inner join Groups 
+         on Students.group_id = Groups.group_id;
+
+Добавить - плохо! :
+insert into Groups (group_id, group_no) values
+    (1, 'M3437');
+Так как Дубли Противоречия
+Удаление :
+delete from Groups where group_no = 'M3437';
+Запрещаем :
+alter table Groups
+    add constraint group_id_unique unique (group_id);
+Проверяем :
+insert into Groups (group_id, group_no) values 
+(1, 'M3437');
+ERROR:  duplicate key value violates unique constraint "group_id_unique"
+DETAIL:  Key (group_id)=(1) already exists.
+
+Добавление - плохо! : 
+update Students set group_id = 5 where student_id = 1;
+Потому что потея информации, противоречия
+Удалить противоречия - вернули как было: 
+update Students set group_id = 1 where student_id = 1;
+Запрещаем: 
+alter table Students add foreign key (group_id)
+    references Groups (group_id);
+Проверяем: 
+update Students set group_id = 5 where student_id = 1;
+ERROR:  insert or update on table "students" violates foreign key constraint "students_group_id_fkey"
+DETAIL:  Key (group_id)=(5) is not present in table "groups".
+
+\q - выйти из psql. 
+\h [SQL команда] - вывести справку по команде SQL.
+\g [SQL запрос]; - выполнить SQL запрос, заметьте точку с запятой в конце, означающую конец запроса
+Запрос можно выполнять прямо в приглашении базы данных:
+oko# SELECT version();
+Нажмите q, чтобы вернуться в приглашение.
+Запрос может быть не только на выборку (SELECT) но и на создание, удаление, манипуляции с таблицами, базами данных, внутренними таблицами.
+
+
+sudo -u postgres psql -d postgres --command "\i 'print_table.sql'" ---- запускает каманды из файла 
+
+sudo -u postgres psql -d postgres --command "\i 'tasks.sql'" ---- создание с 0, надо все переименовать Group -> Group2 ... 
+
+sudo -u postgres psql -d postgres --output='myoutput.txt' --command "\i 'print_table.sql'" ---- вывод в файлик, файлик находится на машине postgres
+
+
+
+
+
+теоретическое дз лекция 3 - слайд 25   

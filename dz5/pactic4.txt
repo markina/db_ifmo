@@ -1,0 +1,60 @@
+I
+
+Поставщики   S   S_id S_name 
+Товары       G   G_id G_name
+Город		 C   C_id C_name
+что кто где  SGC S_id G_id C_id price num 
+
+запрос где подают G_id = 1
+Вся необходимая инфа есть в последный таблице
+1.
+pi_(C_id) (sigma_(G_id == 1) SGC )
+
+select C_id 
+  from SGC 
+ where G_id == 1
+2. где продают товар m?
+pi_(C_id) (sigma_(G_name == m) (G соед SGC))
+
+select distinct C_id
+from G natural join SGC
+where G_name == m
+
+3. еще интересуют названия говродов 
+pi_(C_name) (sigma_(G_name == m) (G соед SGC coeд S))
+
+select distinct C_name
+from G natural join SGC
+where G_name == m
+
+4. в какие городах не продают товар m .. тут что-то другое 
+pi_(C_name) (sigma_(G_name != m) (G соед SGC coeд S))
+
+select distinct C_name
+from G natural join SGC
+where not (G_name == m)
+
+5. в какие городах не продают товар m
+С - pi_(C_id, C_name) (sigma_(G_name == m) (SGC соед S соед G))
+
+select distinct C_name
+from G join SGC natural join S
+where not (G_name == m)
+
+II
+1. товары которые подаются всеми поставщиками 
+pi_(S_id, G_id)(SGC знакделен pi_(S_is) S)
+
+select G_id, count(distinct S_id) from SGC
+Group by G_id  
+having C = (select count(S_id) from S)
+
+2. товары которые подаются всеми поставщиками торгауещие в городе 1 
+pi_(S_id, G_id)(SGC знакделен pi_(S_is) S)
+
+select G_id, count(distinct S_id) from SGC where C_id = 1 
+Group by G_id                         (natural join SGC) - где-то тут 
+having C = (select count(S_id) from S)
+where C_id = 1 
+
+
